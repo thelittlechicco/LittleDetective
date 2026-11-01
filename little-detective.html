@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#2f8f9d"><title>Little Detective</title>
+<style>
+:root{--paper:#fff4dc;--folder:#f2cf8e;--teal:#2f8f9d;--ink:#2f3b52;--orange:#ff8c42;--lemon:#ffd54f;--mint:#c9ecd9;--sky:#d6ecf7;font-family:'Arial Rounded MT Bold','Trebuchet MS',Arial,sans-serif;color:var(--ink)}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--paper);min-height:100vh;padding-bottom:36px;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0}button:focus-visible{outline:5px solid var(--orange);outline-offset:3px}button:disabled{opacity:.45;cursor:default}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;max-width:900px;margin:auto;background:none}
+.logo{font-size:27px;margin:0}.bar{display:flex;gap:10px}.pill{background:#fff;border-radius:40px;min-width:64px;height:64px;font-size:26px;padding:0 18px;box-shadow:0 4px 0 #0001}
+main{max-width:900px;margin:auto;padding:0 18px;text-align:center}
+.hero{font-size:84px;margin:0;line-height:1}.say{font-size:22px;margin:10px auto 22px;background:#fff;display:inline-block;padding:12px 22px;border-radius:30px}
+.files{display:grid;gap:16px}
+.file{position:relative;display:flex;align-items:center;gap:16px;background:var(--folder);border-radius:8px 26px 26px 26px;padding:18px 22px;min-height:100px;text-align:left;font-size:24px;box-shadow:0 6px 0 #c99a4d}
+.file::before{content:'';position:absolute;top:-12px;left:0;width:34%;height:14px;background:var(--folder);border-radius:10px 10px 0 0}
+.file .ic{width:70px;height:70px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:42px;flex:none}
+.file small{display:block;font-size:18px;margin-top:4px}.stamp{margin-left:auto;font-size:15px;color:#2a8a4f;border:4px solid #2a8a4f;border-radius:12px;padding:4px 10px;transform:rotate(-8deg);background:#fff9}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.back{background:#fff;border-radius:40px;height:56px;padding:0 20px;font-size:20px}
+.story{background:#fff;border-radius:26px;padding:16px 20px;font-size:22px;line-height:1.4;margin:12px 0}
+.room{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px;border-radius:30px;background:var(--sky)}
+.spot{aspect-ratio:1.5;border-radius:26px;background:#fff;display:grid;place-items:center;align-content:center;font-size:min(14vw,70px);box-shadow:0 7px 0 #0002;transition:transform .15s}.spot span{font-size:min(4.4vw,20px)}.spot:active{transform:scale(.95)}.spot.done{background:var(--mint)}
+.note{margin:16px 0;background:#fff;border:4px dashed var(--teal);border-radius:24px;padding:12px 16px;text-align:left;min-height:88px;font-size:20px}.note b{display:block;font-size:19px;color:var(--teal);margin-bottom:4px}.note div{margin:6px 0}
+.cta{background:var(--orange);color:#fff;border-radius:44px;height:76px;padding:0 40px;font-size:28px;box-shadow:0 6px 0 #d46a1f;margin:6px 0}
+.sus{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.card{background:#fff;border-radius:28px;padding:12px 6px;font-size:min(16vw,76px);box-shadow:0 7px 0 #0002;border:6px solid transparent;line-height:1.1}.card b{display:block;font-size:min(4.8vw,22px);margin:4px 0}.card i{display:block;font-style:normal;font-size:min(3.8vw,17px);background:var(--sky);border-radius:14px;margin:4px 4px 0;padding:4px 2px}
+.card.sel{border-color:var(--orange);background:#fff0de}.card.out{opacity:.35}
+.shake{animation:shake .45s}.pop{animation:pop .6s}@keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}@keyframes pop{40%{transform:scale(1.18) rotate(-3deg)}}
+.msg{font-size:21px;min-height:60px;display:flex;gap:10px;align-items:center;justify-content:center}.msg b{font-size:44px}.msg p{margin:0;background:#fff;padding:10px 18px;border-radius:24px}
+.fly{position:fixed;top:-60px;font-size:40px;pointer-events:none;animation:fall 2.2s linear forwards;z-index:9}@keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
+dialog{border:0;border-radius:30px;padding:26px;max-width:440px;font-size:17px;line-height:1.6}dialog::backdrop{background:#0006}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<header><h1 class="logo">🔍 Little Detective</h1><div class="bar"><button class="pill" id="snd" aria-label="Sound on or off">🔊</button><button class="pill" id="adult" aria-label="For grown-ups">?</button></div></header>
+<main id="app"></main>
+<dialog id="dlg"><div id="dbody"></div><button class="back" onclick="dlg.close()">Close</button></dialog>
+<script>
+'use strict';
+const CASES=[
+{t:'The Missing Cookies',e:'🍪',story:'Oh no! The cookies from the cookie jar are gone! Let us find the clues.',spots:[['🫙','Cookie jar','Brown hairs are stuck on the lid!','brown fur'],['🪟','Window','A floppy ear left a mark in the crumbs!','floppy ears'],['🪑','Chair','Nothing here. Keep looking!']],
+ sus:[['Puppy','🐶',['brown fur','floppy ears']],['Bunny','🐰',['white fur','long ears']],['Kitty','🐱',['grey fur','whiskers']]],ans:0},
+{t:'The Muddy Footprints',e:'🐾',story:'Someone walked through the garden and left muddy marks. Who was it?',spots:[['🌷','Flower bed','Look! A yellow feather!','feathers'],['🚪','Garden gate','The footprints are webbed!','webbed feet'],['🪣','Watering can','Nothing here. Keep looking!']],
+ sus:[['Piggy','🐷',['pink skin','curly tail']],['Henny','🐔',['feathers','red comb']],['Ducky','🦆',['feathers','webbed feet']]],ans:2},
+{t:'The Missing Balloon',e:'🎈',story:'The blue balloon is gone from the party! Who took it?',spots:[['📚','High shelf','Something reached up very high!','tall'],['🪟','Window','Spotty hairs on the window!','spots'],['🌿','Plant','A neck stretched in through the window!','long neck'],['🧸','Toy box','Nothing here. Keep looking!']],
+ sus:[['Ellie','🐘',['big ears','grey']],['Gigi','🦒',['tall','spots','long neck']],['Momo','🐵',['climbs','long tail']]],ans:1},
+{t:'The Midnight Noise',e:'🌙',story:'Something is making a noise outside at night. Who is it?',spots:[['🌳','Tree','A soft feather floats down!','feathers'],['🔦','Flashlight','Two big round eyes shine back!','big eyes'],['🪟','Window','You hear hoot, hoot!','hoots']],
+ sus:[['Batty','🦇',['wings','upside down']],['Olly','🦉',['feathers','big eyes','hoots']],['Froggy','🐸',['green','croaks']]],ans:1},
+{t:'The Birthday Cake',e:'🎂',story:'Oh dear! A big slice of birthday cake is missing. Who ate it?',spots:[['🍯','Table','Sticky honey on the plate!','loves honey'],['🌲','Doorway','Giant paw prints!','big paws'],['🧺','Basket','Brown fur in the basket!','brown fur']],
+ sus:[['Foxy','🦊',['orange fur','bushy tail']],['Bruno','🐻',['brown fur','big paws','loves honey']],['Rocky','🦝',['mask','ring tail']]],ans:1}];
+const app=document.getElementById('app'),dlg=document.getElementById('dlg'),$=id=>document.getElementById(id);
+let done={},snd=true,c,found,sel,wrong,order;
+try{done=JSON.parse(localStorage.getItem('littleDetective.v1'))||{}}catch(e){}
+const save=()=>{try{localStorage.setItem('littleDetective.v1',JSON.stringify(done))}catch(e){}};
+function say(t,retry){if(!snd||!window.speechSynthesis)return;try{speechSynthesis.cancel();setTimeout(()=>{try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';const pv=retry?null:pickVoice();if(pv)u.voice=pv;u.rate=.85;u.pitch=pv&&PREF.test(pv.name)&&!MALE.test(pv.name)?1.05:1.25;u.onerror=e=>{if(!retry&&e.error!=='canceled'&&e.error!=='interrupted')say(t,true)};speechSynthesis.speak(u)}catch(e){}},60)}catch(e){}}
+function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;for(let n=0;n<14;n++){const f=document.createElement('div');f.className='fly';f.textContent=['⭐','🔍','🎉','✨','🏅'][n%5];f.style.left=Math.random()*95+'%';f.style.animationDelay=Math.random()*.6+'s';document.body.append(f);setTimeout(()=>f.remove(),3000)}}
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+function home(){window.speechSynthesis&&speechSynthesis.cancel();const all=CASES.every((_,k)=>done[k]);
+app.innerHTML=`<div class="hero">${all?'🏆':'🕵️'}</div><div class="say">${all?'Super Detective!':'Choose a case file!'}</div><div class="files">${CASES.map((x,k)=>`<button class="file" data-k="${k}" aria-label="Case ${k+1}: ${x.t}${done[k]?', solved':''}"><span class="ic">${x.e}</span><span>${x.t}<small>Case ${k+1}</small></span>${done[k]?'<span class="stamp">SOLVED</span>':''}</button>`).join('')}</div>`;
+app.onclick=e=>{const b=e.target.closest('[data-k]');if(b)open(+b.dataset.k)}}
+function open(k){c=k;found=[];sel=null;wrong=0;const x=CASES[k];order=shuffle(x.sus.map((s,i)=>i));
+app.innerHTML=`<div class="top"><button class="back" id="bk" aria-label="Back to case files">📁 Cases</button><span style="font-size:20px">Case ${k+1}</span></div><div class="story">${x.story}</div><div class="room" id="room">${x.spots.map((s,i)=>`<button class="spot" data-i="${i}" aria-label="Search the ${s[1]}">${s[0]}<span>${s[1]}</span></button>`).join('')}</div><div class="note" id="note"><b>🔍 My clues</b><div style="opacity:.6">Tap places to search!</div></div><div id="act"></div>`;
+$('bk').onclick=home;setTimeout(()=>say(x.story),200);
+$('room').onclick=e=>{const b=e.target.closest('.spot');if(!b)return;const i=+b.dataset.i,s=x.spots[i];say(s[2]);if(!s[3]){b.classList.add('shake');b.addEventListener('animationend',()=>b.classList.remove('shake'),{once:true});return}
+if(!found.includes(i)){found.push(i);b.classList.add('done','pop')}
+$('note').innerHTML='<b>🔍 My clues</b>'+found.map(j=>`<div>${x.spots[j][0]} ${x.spots[j][2]}</div>`).join('');
+if(found.length===x.spots.filter(s=>s[3]).length)$('act').innerHTML='<button class="cta" id="who">Who did it? 🕵️</button>',$('who').onclick=accuse}}
+function accuse(){const x=CASES[c];app.innerHTML=`<div class="top"><button class="back" id="bk" aria-label="Back to case files">📁 Cases</button><span style="font-size:20px">Case ${c+1}</span></div><div class="story">Read your clues. Who did it?</div><div class="sus" id="sus">${order.map(i=>`<button class="card" data-i="${i}" aria-label="${x.sus[i][0]}: ${x.sus[i][2].join(', ')}">${x.sus[i][1]}<b>${x.sus[i][0]}</b>${x.sus[i][2].map(t=>`<i>${t}</i>`).join('')}</button>`).join('')}</div><div class="note"><b>🔍 My clues</b>${found.map(j=>`<div>${x.spots[j][0]} ${x.spots[j][2]}</div>`).join('')}</div><div class="msg"><b>🕵️</b><p id="msg">Tap a friend to check.</p></div><div id="act"></div>`;
+$('bk').onclick=home;say('Read your clues. Who did it?');
+$('sus').onclick=e=>{const b=e.target.closest('.card');if(!b||b.classList.contains('out'))return;sel=+b.dataset.i;document.querySelectorAll('.card').forEach(n=>n.classList.toggle('sel',n===b));const s=x.sus[sel];say(`${s[0]} has ${s[2].join(' and ')}.`);$('act').innerHTML='<button class="cta" id="yes">It was you! 🔍</button>';$('yes').onclick=()=>check(b)}}
+function check(b){const x=CASES[c];if(sel===x.ans){done[c]=1;save();confetti();b.classList.add('pop');const n=x.sus[sel][0];$('msg').textContent=`Case closed! It was ${n}!`;say(`Case closed! It was ${n}! Great detective work!`);$('act').innerHTML='<button class="cta" id="h">Next case ➜</button>';$('h').onclick=home}
+else{wrong++;b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');$('msg').textContent='Hmm, check your clues again!';say('Hmm, check your clues again.');if(wrong>=2){b.classList.add('out');b.classList.remove('sel');sel=null;$('act').innerHTML=''}}}
+$('adult').onclick=()=>{$('dbody').innerHTML='<h2 style="margin-top:0">For grown-ups</h2><p>Little Detective builds observation and simple logic for ages 5–8. Children search for clues, then match them to the right suspect. No timer, no losing, no ads, no links out. Voice uses your device\'s built-in speech.</p><p>Progress is saved on this device only. No accounts or personal data.</p>';voiceUI();dlg.showModal()};
+$('snd').onclick=()=>{snd=!snd;$('snd').textContent=snd?'🔊':'🔇';if(!snd&&window.speechSynthesis)speechSynthesis.cancel()};
+let voices=[],vname='';try{vname=localStorage.getItem('kidsVoice')||''}catch(e){}
+const PREF=/samantha|karen|moira|tessa|serena|aria|jenny|zira|susan|hazel|libby|sonia|google us english|google uk english female|female/i;
+function loadVoices(){try{voices=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang))}catch(e){}}
+const MALE=/daniel|alex|fred|david|mark|george|guy|ryan|james|thomas|rishi|arthur|oliver|male(?!.*female)/i;
+function pickVoice(){return voices.find(v=>v.name===vname)||voices.find(v=>PREF.test(v.name)&&!MALE.test(v.name))||voices.find(v=>!MALE.test(v.name))||voices[0]}
+function voiceUI(){loadVoices();const b=$('dbody');b.insertAdjacentHTML('beforeend',voices.length?'<p><label>Voice: <select id="vs">'+voices.map(v=>`<option value="${v.name}" ${v===pickVoice()?'selected':''}>${v.name}</option>`).join('')+'</select></label></p>':'<p>No English voice found on this device yet.</p>');b.insertAdjacentHTML('beforeend','<p><button class="back" id="tv">🔊 Test voice</button></p><p style="font-size:14px">No sound? Turn up the media volume, switch off silent mode, and check the device Text-to-speech settings (an English voice must be installed).</p>');$('tv').onclick=()=>say('Hello! Can you hear me?');if($('vs'))$('vs').onchange=e=>{vname=e.target.value;try{localStorage.setItem('kidsVoice',vname)}catch(_){}say('Hello! Can you hear me?')}}
+if(window.speechSynthesis){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+home();
+</script></body></html>
